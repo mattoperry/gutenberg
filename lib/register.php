@@ -250,6 +250,7 @@ function gutenberg_collect_meta_box_data() {
  * @return bool Whether the post can be edited with Gutenberg.
  */
 function gutenberg_can_edit_post( $post_id ) {
+	$can_edit = true;
 	$post = get_post( $post_id );
 	if ( ! $post ) {
 		return false;
@@ -259,11 +260,23 @@ function gutenberg_can_edit_post( $post_id ) {
 		return false;
 	}
 
-	if ( ! gutenberg_can_edit_post_type( $post->post_type ) ) {
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		return false;
 	}
 
-	return current_user_can( 'edit_post', $post_id );
+	if ( ! gutenberg_can_edit_post_type( $post->post_type ) ) {
+		$can_edit = false;
+	}
+	
+	/**
+	 * Filter to allow plugins to enable/disable Gutenberg for particular post_ids.
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param bool   $can_edit  Whether the post_id can be edited or not.
+	 * @param string $post_id The post_id being checked.
+	 */
+	return apply_filters( 'gutenberg_can_edit_post', $can_edit, $post_id );
 }
 
 /**
